@@ -1,0 +1,110 @@
+  throttle = THREE.MathUtils.clamp(1 - (ev.clientY - r.top) / r.height, 0, 1);
+  throttleKnob.style.bottom = `${throttle * 100}%`;
+  throttleKnob.style.transform = 'translateY(50%)';
+}
+throttleKnob.style.bottom = '72%';
+throttleKnob.style.transform = 'translateY(50%)';
+throttleTrack.addEventListener('pointerdown', (e) => {
+  thrOn = true; thrPid = e.pointerId;
+  throttleTrack.setPointerCapture(e.pointerId);
+  thrFrom(e); e.preventDefault();
+});
+throttleTrack.addEventListener('pointermove', (e) => { if (thrOn && e.pointerId === thrPid) thrFrom(e); });
+throttleTrack.addEventListener('pointerup', () => { thrOn = false; });
+throttleTrack.addEventListener('pointercancel', () => { thrOn = false; });
+
+const raycaster = new THREE.Raycaster();
+const pointer = new THREE.Vector2();
+canvas.addEventListener('pointerdown', (e) => {
+  if (!playing || e.target !== canvas) return;
+  const rect = canvas.getBoundingClientRect();
+  pointer.x = ((e.clientX - rect.left) / rect.width) * 2 - 1;
+  pointer.y = -((e.clientY - rect.top) / rect.height) * 2 + 1;
+  raycaster.setFromCamera(pointer, camera);
+  const hits = raycaster.intersectObjects(markerGroup.children, true);
+  if (!hits.length) return;
+  let obj = hits[0].object;
+  while (obj && !Object.values(markerMeshes).some((m) => m.group === obj)) obj = obj.parent;
+  for (const [id, m] of Object.entries(markerMeshes)) {
+    if (m.group === obj) {
+      flyTarget = id;
+      objectiveEl.textContent = `目標：飛往 ${m.lm.name}`;
+      showToast(`導航 → ${m.lm.name}`);
+      updateChecklist();
+      break;
+    }
+  }
+});
+
+function showToast(msg) {
+  toastEl.textContent = msg;
+  toastEl.hidden = false;
+  toastTimer = 2.5;
+}
+function updateChecklist() {
+  checklistEl.querySelectorAll('li').forEach((li) => {
+    const id = li.dataset.id;
+    li.classList.toggle('done', visited.has(id));
+    li.classList.toggle('active', flyTarget === id);
+    const lm = LANDMARKS.find((l) => l.id === id);
+    li.textContent = `${visited.has(id) ? '✓' : '○'} ${lm.name}`;
+  });
+}
+
+function updateLayers(alt) {
+  let band = BANDS[BANDS.length - 1];
+  for (const b of BANDS) {
+    if (alt >= b.min) { band = b; break; }
+  }
+  /* DEM+sat LOD: coarser mesh at high altitude */
+  G.extreme.visible = alt >= 1800;
+  G.high.visible = alt >= 800 && alt < 2200;
+  G.mid.visible = alt >= 250 && alt < 1000;
+  G.low.visible = alt < 400;
+  if (alt >= 1800) {
+    G.high.visible = false;
+    G.mid.visible = false;
+    G.low.visible = false;
+  } else if (alt >= 800) {
+    G.mid.visible = false;
+    G.low.visible = false;
+  } else if (alt >= 250) {
+    G.low.visible = false;
+  }
+  cloudGroup.visible = alt > 500;
+
+  if (alt >= 2000) { scene.fog.density = 0.000005; scene.background.set(0x4a8ab8); }
+  else if (alt >= 700) { scene.fog.density = 0.000009; scene.background.set(0x6aaad0); }
+  else if (alt >= 200) { scene.fog.density = 0.000016; scene.background.set(0x7eb8d8); }
+  else { scene.fog.density = 0.000024; scene.background.set(0x87c0e0); }
+
+  layerEl.textContent = band.name;
+  layerEl.className = 'layer-badge ' + band.cls;
+}
+
+function collide(dt) {
+  const gnd = terrainHeight(flight.pos.x, flight.pos.z);
+  const minY = gnd + 25;
+  if (flight.pos.y < minY) {
+    flight.pos.y = THREE.MathUtils.lerp(flight.pos.y, minY, 1 - Math.exp(-6 * dt));
+    if (flight.pitch < 0) flight.pitch *= 0.4;
+    flight.speed *= 0.99;
+  }
+  if (flight.pos.y > 14000) flight.pos.y = 14000;
+}
+
+function checkLM() {
+  for (const lm of LANDMARKS) {
+    if (visited.has(lm.id)) continue;
+    const dist = Math.hypot(flight.pos.x - lm.x, flight.pos.z - lm.z);
+    const dy = flight.pos.y - terrainHeight(lm.x, lm.z);
+    if (dist < 2800 && dy < 1600) {
+      visited.add(lm.id);
+      showToast(`抵達 ${lm.name}！`);
+      updateChecklist();
+      if (flyTarget === lm.id) {
+        flyTarget = null;
+        objectiveEl.textContent = '目標：點地標或自由巡航';
+      }
+      if (visited.size === LANDMARKS.length) {
+        setTimeout(() => {
