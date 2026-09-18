@@ -18,7 +18,7 @@
     <div id="ui">
       <header>
         <h1>峇里島飛行</h1>
-        <p class="sub">A330 · 離線 PWA · 即開即飛</p>
+        <p class="sub">A330 · 街機操控 · 即開即飛</p>
       </header>
       <div id="hud">
         <div class="hud-row"><span class="hud-label">高度</span> <span id="alt">0</span> m</div>
@@ -28,14 +28,14 @@
         <div id="layer" class="layer-badge">極高空</div>
         <div id="objective" class="obj">目標：飛往地標</div>
         <ul id="checklist"></ul>
-        <p id="hint">W/S 俯仰 · A/D 滾轉 · Space/Shift 油門</p>
+        <p id="hint">左搖桿：轉彎／爬升 · 右：油門 · 下方按鈕也可</p>
       </div>
       <div id="toast" hidden></div>
     </div>
 
     <div id="overlay" class="panel">
       <h2>峇里島飛行</h2>
-      <p>駕駛華航風格 Airbus A330，飛越峇里島地形（預烘焙 DEM + 衛星）。離線可玩 · 加入主畫面像 App。</p>
+      <p>駕駛華航風格 Airbus A330，飛越峇里島。街機操控 · 離線可玩 · 加入主畫面像 App。</p>
       <ul class="tips">
         <li>✈ DPS 機場</li>
         <li>🏖 Seminyak</li>
@@ -43,8 +43,9 @@
         <li>🕶 Uluwatu 懸崖</li>
       </ul>
       <p class="controls">
-        觸控：左搖桿滾轉／俯仰 · 右油門 · 點地標導航<br />
-        鍵盤：W/S 俯仰 · A/D 滾轉 · Space↑ / Shift↓ 油門<br />
+        <strong>觸控：</strong>左大搖桿＝左右轉彎＋上下爬升 · 右油門<br />
+        或按住下方「左轉／右轉／爬升／下降／加速」<br />
+        鍵盤：A/D 轉 · W/S 爬升 · Space 油門<br />
         <strong>iPhone：</strong>分享 →「加入主畫面」
       </p>
       <button id="startBtn" type="button">開始飛行</button>
@@ -57,13 +58,20 @@
       <button id="againBtn" type="button">再飛一次</button>
     </div>
 
-    <div id="joy" aria-hidden="true">
+    <div id="joy" aria-hidden="false">
       <div id="joyBase"><div id="joyKnob"></div></div>
       <div id="throttleBar">
         <div id="throttleTrack">
           <div id="throttleKnob"></div>
         </div>
         <span class="thr-label">油門</span>
+      </div>
+      <div id="arcadeBtns">
+        <button type="button" id="btnLeft" class="arc-btn">左轉</button>
+        <button type="button" id="btnRight" class="arc-btn">右轉</button>
+        <button type="button" id="btnUp" class="arc-btn">爬升</button>
+        <button type="button" id="btnDown" class="arc-btn">下降</button>
+        <button type="button" id="btnBoost" class="arc-btn arc-boost">加速</button>
       </div>
     </div>
 
