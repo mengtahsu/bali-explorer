@@ -1,11 +1,2 @@
-import { SAT_P0 } from './sat_part0.js';
-import { SAT_P1 } from './sat_part1.js';
-import { SAT_P2 } from './sat_part2.js';
-import { SAT_P3 } from './sat_part3.js';
-import { SAT_P4 } from './sat_part4.js';
-import { SAT_P5 } from './sat_part5.js';
-import { SAT_P6 } from './sat_part6.js';
-import { SAT_P7 } from './sat_part7.js';
-import { SAT_P8 } from './sat_part8.js';
-import { SAT_P9 } from './sat_part9.js';
-export const SAT_JPG_B64 = SAT_P0+SAT_P1+SAT_P2+SAT_P3+SAT_P4+SAT_P5+SAT_P6+SAT_P7+SAT_P8+SAT_P9;
+/* no embedded sat — ESRI World Imagery at runtime */
+export const SAT_JPG_B64 = "";
