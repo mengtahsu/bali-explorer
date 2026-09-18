@@ -1,17 +1,14 @@
-# Bali Flight Simulator
+# Bali Flight Explorer
 
-Browser Airbus A330 flight over **real Bali geography**:
-
-- Elevation from Mapzen/Terrarium DEM (lon 114.42–115.72, lat −8.85–−8.06)
-- Satellite drape (ESRI World Imagery at runtime, embedded fallback)
-- Coordinated-turn flight model: bank turns without asymmetric climb/descent
-- Scale: 1 unit = 1 meter · island ~143×87 km
+Playable A330 flight over **real Bali DEM** (Terrarium/Mapzen) draped with **ESRI World Imagery** satellite tiles.
 
 ## Play
 
-Open GitHub Pages / raw.githack `docs/index.html`.
+https://raw.githack.com/mengtahsu/bali-explorer/main/docs/index.html
 
-## Controls
+## Notes
 
-- W/S — pitch · A/D (or Q/E) — bank (level turn) · Space/Shift — throttle
-- Touch: left stick X=bank Y=pitch, right throttle
+- Terrain is elevation mesh + satellite texture (not Google Earth / Cesium 3D building meshes).
+- Satellite tiles load at runtime from ESRI (needs network; CORS usually OK).
+- Coordinated-turn model: bank → turn only; pitch → climb/descent only (no L/R altitude asymmetry).
+- Embedded DEM is 256×160 Int16 gzip for GitHub text limits; fine for cruise-scale flying.
