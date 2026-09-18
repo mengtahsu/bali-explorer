@@ -1,0 +1,88 @@
+function frame(now) {
+  const dt = Math.min(0.05, (now - last) / 1000);
+  last = now;
+  waterT += dt;
+  ocean.position.y = -0.5 + Math.sin(waterT * 0.4) * 0.25;
+  if (toastTimer > 0) {
+    toastTimer -= dt;
+    if (toastTimer <= 0) toastEl.hidden = true;
+  }
+  if (!ready) {
+    camera.position.set(0, 25000, WORLD_D * 0.55);
+    camera.lookAt(0, 500, 0);
+    renderer.render(scene, camera);
+    requestAnimationFrame(frame);
+    return;
+  }
+  if (playing) {
+    updateFlight(dt);
+    updateCamera(dt);
+    updateHUD();
+  } else if (!overlay.hidden) {
+    const t = now * 0.00006;
+    camera.position.set(Math.sin(t) * WORLD_W * 0.55, 14000, Math.cos(t) * WORLD_D * 0.65);
+    camera.lookAt(0, 400, 0);
+    updateLayers(12000);
+  }
+  renderer.render(scene, camera);
+  requestAnimationFrame(frame);
+}
+requestAnimationFrame(frame);
+
+function resetFlight() {
+  const s = lonLatToXZ(115.2, -9.15);
+  flight.pos.set(s.x, 8500, s.z);
+  flight.pitch = 0.02;
+  flight.yaw = Math.PI / 2;
+  flight.roll = 0;
+  flight.speed = 210;
+  throttle = 0.72;
+  throttleKnob.style.bottom = '72%';
+  visited = new Set();
+  flyTarget = 'dps';
+  objectiveEl.textContent = '目標：飛往 DPS 機場';
+  updateChecklist();
+  winPanel.hidden = true;
+  plane.position.copy(flight.pos);
+  orientPlane();
+  updateCamera(1);
+  updateHUD();
+}
+function startGame() {
+  if (!ready) return;
+  overlay.hidden = true;
+  winPanel.hidden = true;
+  playing = true;
+  resetFlight();
+  showToast('起飛！往北飛向真實峇里島');
+}
+startBtn.addEventListener('click', startGame);
+againBtn.addEventListener('click', () => {
+  winPanel.hidden = true;
+  playing = true;
+  resetFlight();
+  showToast('再次起飛');
+});
+
+(async function boot() {
+  try {
+    toastEl.hidden = false;
+    toastEl.textContent = '載入真實地形 DEM…';
+    await loadHeightmap();
+    toastEl.textContent = '載入衛星影像…';
+    satTex = await loadSatelliteTexture();
+    buildTerrains();
+    placeMarkers();
+    ready = true;
+    updateLayers(8500);
+    updateChecklist();
+    objectiveEl.textContent = '目標：開始後飛往地標';
+    toastEl.textContent = '就緒 — 真實 DEM + 衛星';
+    setTimeout(() => { if (!playing) toastEl.hidden = true; }, 2000);
+    console.info('[Bali Flight] real DEM+sat · A330 · coordinated turns · island', (WORLD_W / 1000).toFixed(0), '×', (WORLD_D / 1000).toFixed(0), 'km');
+  } catch (e) {
+    console.error(e);
+    toastEl.hidden = false;
+    toastEl.textContent = '載入失敗：' + e.message;
+  }
+})();

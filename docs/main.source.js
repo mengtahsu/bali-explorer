@@ -1,6 +1,7 @@
 const base = new URL('.', import.meta.url);
+const N = 8;
 const parts = await Promise.all(
-  Array.from({ length: 8 }, (_, i) =>
+  Array.from({ length: N }, (_, i) =>
     fetch(new URL('main.part' + i + '.txt', base)).then((r) => {
       if (!r.ok) throw new Error('part ' + i + ' ' + r.status);
       return r.text();
