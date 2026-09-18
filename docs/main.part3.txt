@@ -1,0 +1,105 @@
+  geo.computeVertexNormals();
+  return geo;
+}
+
+const ocean = new THREE.Mesh(
+  new THREE.CircleGeometry(400000, 96),
+  new THREE.MeshStandardMaterial({ color: 0x0a3d5c, roughness: 0.28, metalness: 0.2 })
+);
+ocean.rotation.x = -Math.PI / 2;
+ocean.position.y = -0.5;
+scene.add(ocean);
+
+let satTex = null;
+
+function buildTerrains() {
+  const mat = new THREE.MeshStandardMaterial({
+    map: satTex,
+    roughness: 0.95,
+    metalness: 0.02,
+  });
+  G.extreme.add(new THREE.Mesh(buildTerrainGeo(64, 40), mat));
+  G.high.add(new THREE.Mesh(buildTerrainGeo(128, 80), mat.clone()));
+  G.mid.add(new THREE.Mesh(buildTerrainGeo(192, 120), mat.clone()));
+  G.low.add(new THREE.Mesh(buildTerrainGeo(256, 160), mat.clone()));
+}
+
+/* Soft cloud layer only — no toy props */
+const cloudGroup = new THREE.Group();
+scene.add(cloudGroup);
+{
+  const cmat = new THREE.MeshBasicMaterial({ color: 0xf2f6fa, transparent: true, opacity: 0.45, depthWrite: false });
+  for (let i = 0; i < 28; i++) {
+    const c = new THREE.Mesh(new THREE.SphereGeometry(900 + (i % 7) * 200, 8, 6), cmat);
+    const ang = i * 2.4;
+    c.position.set(Math.sin(ang) * 50000, 3200 + (i % 5) * 400, Math.cos(ang) * 40000);
+    c.scale.set(2.2, 0.4, 1.4);
+    cloudGroup.add(c);
+  }
+}
+
+const markerGroup = new THREE.Group();
+scene.add(markerGroup);
+const markerMeshes = {};
+
+function placeMarkers() {
+  LANDMARKS.forEach((lm) => {
+    const g = new THREE.Group();
+    const pole = new THREE.Mesh(
+      new THREE.CylinderGeometry(3, 5, 160, 8),
+      new THREE.MeshStandardMaterial({ color: lm.color, emissive: lm.color, emissiveIntensity: 0.3 })
+    );
+    pole.position.y = 80;
+    g.add(pole);
+    const ball = new THREE.Mesh(
+      new THREE.SphereGeometry(18, 12, 12),
+      new THREE.MeshStandardMaterial({ color: lm.color, emissive: lm.color, emissiveIntensity: 0.5 })
+    );
+    ball.position.y = 175;
+    g.add(ball);
+    const y = terrainHeight(lm.x, lm.z);
+    g.position.set(lm.x, y, lm.z);
+    markerGroup.add(g);
+    markerMeshes[lm.id] = { group: g, ball, lm };
+  });
+}
+
+/* —— A330 (clean airliner mesh) —— */
+const plane = new THREE.Group();
+scene.add(plane);
+function buildA330() {
+  const white = new THREE.MeshStandardMaterial({ color: 0xf5f5f5, roughness: 0.35, metalness: 0.35 });
+  const red = new THREE.MeshStandardMaterial({ color: 0xc8102e, roughness: 0.4, metalness: 0.25 });
+  const dark = new THREE.MeshStandardMaterial({ color: 0x1a1e24, roughness: 0.5, metalness: 0.4 });
+  const eng = new THREE.MeshStandardMaterial({ color: 0xc8ccd0, roughness: 0.3, metalness: 0.55 });
+  const glass = new THREE.MeshStandardMaterial({
+    color: 0x3a90c0, roughness: 0.12, metalness: 0.7, transparent: true, opacity: 0.75,
+  });
+  const fuseLen = 52, fuseR = 3.05;
+  const fuselage = new THREE.Mesh(new THREE.CapsuleGeometry(fuseR, fuseLen, 6, 16), white);
+  fuselage.rotation.z = Math.PI / 2;
+  plane.add(fuselage);
+  const nose = new THREE.Mesh(new THREE.ConeGeometry(fuseR * 0.95, 8, 14), white);
+  nose.rotation.z = -Math.PI / 2;
+  nose.position.x = fuseLen / 2 + 3.2;
+  plane.add(nose);
+  const cockpit = new THREE.Mesh(new THREE.SphereGeometry(2.4, 12, 10, 0, Math.PI * 2, 0, Math.PI / 2), glass);
+  cockpit.position.set(fuseLen / 2 - 2, 2.2, 0);
+  plane.add(cockpit);
+  const stripe = new THREE.Mesh(new THREE.BoxGeometry(fuseLen * 0.85, 0.6, fuseR * 2.05), red);
+  stripe.position.set(0, 0.2, 0);
+  plane.add(stripe);
+  const wing = new THREE.Mesh(new THREE.BoxGeometry(9, 0.55, A330_SPAN), white);
+  wing.position.set(-2, -1.2, 0);
+  plane.add(wing);
+  const tipL = new THREE.Mesh(new THREE.BoxGeometry(2, 0.4, 3), red);
+  tipL.position.set(-2, -1.1, A330_SPAN / 2 - 1);
+  plane.add(tipL);
+  const tipR = tipL.clone();
+  tipR.position.z = -(A330_SPAN / 2 - 1);
+  plane.add(tipR);
+  function makeEngine(z) {
+    const g = new THREE.Group();
+    const cowling = new THREE.Mesh(new THREE.CylinderGeometry(1.85, 1.7, 5.5, 12), eng);
+    cowling.rotation.z = Math.PI / 2;
+    g.add(cowling);
