@@ -1,0 +1,104 @@
+    const intake = new THREE.Mesh(new THREE.TorusGeometry(1.7, 0.25, 8, 16), dark);
+    intake.rotation.y = Math.PI / 2;
+    intake.position.x = 2.6;
+    g.add(intake);
+    const pylon = new THREE.Mesh(new THREE.BoxGeometry(1.2, 2.2, 0.5), white);
+    pylon.position.set(0, 1.4, 0);
+    g.add(pylon);
+    g.position.set(-1, -3.6, z);
+    plane.add(g);
+  }
+  makeEngine(12);
+  makeEngine(-12);
+  const hstab = new THREE.Mesh(new THREE.BoxGeometry(5, 0.35, 22), white);
+  hstab.position.set(-fuseLen / 2 + 2, 1.5, 0);
+  plane.add(hstab);
+  const fin = new THREE.Mesh(new THREE.BoxGeometry(8, 14, 0.6), white);
+  fin.position.set(-fuseLen / 2 + 1, 8, 0);
+  plane.add(fin);
+  const finRed = new THREE.Mesh(new THREE.BoxGeometry(6, 10, 0.65), red);
+  finRed.position.set(-fuseLen / 2 + 0.5, 9, 0);
+  plane.add(finRed);
+}
+buildA330();
+
+/* —— Flight state: quaternion orientation; VS from pitch only —— */
+const spawn = lonLatToXZ(115.2, -9.15); /* south of Bukit over water */
+const flight = {
+  pos: new THREE.Vector3(spawn.x, 8500, spawn.z),
+  /* body rates / attitude */
+  pitch: 0.02, /* rad, nose up + */
+  yaw: Math.PI, /* heading: nose toward -Z initially? aircraft +X is forward */
+  roll: 0, /* bank, right wing down + */
+  speed: 210,
+};
+/* Aircraft model faces +X. Yaw 0 → fly +X (east). Spawn south → fly north = yaw = -PI/2 or +3PI/2.
+   Previous code used yaw=PI with +X forward → flies -X (west). We want north = -Z.
+   Rotation YXZ: yaw around Y. Forward (1,0,0) after yaw θ: (cosθ, 0, -sinθ) in YXZ? 
+   THREE Euler YXZ: applies Y then X then Z.
+   set(pitch, yaw, -roll, 'YXZ') then apply to (1,0,0):
+   After yaw Y: (cos(yaw), 0, -sin(yaw)) — yes +X → east at yaw=0, north (-Z) at yaw=+PI/2.
+*/
+flight.yaw = Math.PI / 2; /* fly north toward island */
+
+plane.position.copy(flight.pos);
+
+const _q = new THREE.Quaternion();
+const _euler = new THREE.Euler();
+const _fwd = new THREE.Vector3();
+const _up = new THREE.Vector3();
+const _cam = new THREE.Vector3();
+const _look = new THREE.Vector3();
+const _vel = new THREE.Vector3();
+
+function orientPlane() {
+  /* YXZ: yaw (heading), pitch, roll — bank does NOT feed into pitch channel */
+  _euler.set(flight.pitch, flight.yaw, -flight.roll, 'YXZ');
+  _q.setFromEuler(_euler);
+  plane.quaternion.copy(_q);
+}
+
+function updateCamera(dt) {
+  orientPlane();
+  _fwd.set(1, 0, 0).applyQuaternion(plane.quaternion);
+  _up.set(0, 1, 0).applyQuaternion(plane.quaternion);
+  const dist = CAM_BACK + flight.speed * 0.4;
+  _cam.copy(_fwd).multiplyScalar(-dist).addScaledVector(_up, CAM_UP);
+  camera.position.lerp(flight.pos.clone().add(_cam), 1 - Math.exp(-2.0 * dt));
+  _look.copy(flight.pos).addScaledVector(_fwd, 120).addScaledVector(_up, 10);
+  camera.lookAt(_look);
+}
+
+window.addEventListener('keydown', (e) => {
+  keys.add(e.code);
+  if (['Space', 'ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(e.code)) e.preventDefault();
+});
+window.addEventListener('keyup', (e) => keys.delete(e.code));
+
+let joyOn = false, joyPid = null;
+function joyFrom(ev) {
+  const r = joyBase.getBoundingClientRect();
+  const cx = r.left + r.width / 2, cy = r.top + r.height / 2;
+  let dx = ev.clientX - cx, dy = ev.clientY - cy;
+  const max = r.width * 0.42, len = Math.hypot(dx, dy) || 1, sc = len > max ? max / len : 1;
+  joy.x = (dx * sc) / max;
+  joy.y = (dy * sc) / max;
+  joyKnob.style.transform = `translate(${dx * sc}px,${dy * sc}px)`;
+}
+function joyEnd() {
+  joy.x = 0; joy.y = 0;
+  joyKnob.style.transform = 'translate(0,0)';
+  joyOn = false; joyPid = null;
+}
+joyBase.addEventListener('pointerdown', (e) => {
+  joyOn = true; joyPid = e.pointerId;
+  joyBase.setPointerCapture(e.pointerId);
+  joyFrom(e); e.preventDefault();
+});
+joyBase.addEventListener('pointermove', (e) => { if (joyOn && e.pointerId === joyPid) joyFrom(e); });
+joyBase.addEventListener('pointerup', joyEnd);
+joyBase.addEventListener('pointercancel', joyEnd);
+
+let thrOn = false, thrPid = null;
+function thrFrom(ev) {
+  const r = throttleTrack.getBoundingClientRect();
