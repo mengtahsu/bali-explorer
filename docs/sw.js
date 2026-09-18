@@ -1,10 +1,10 @@
 /* Bali Flight PWA — cache-first for offline play */
-const CACHE = 'bali-flight-v6';
+const CACHE = 'bali-flight-v7';
 const ASSETS = [
   './app.html','./app.js','./app.css','./manifest.webmanifest','./icons/icon.svg',
   './app/hm128.js','./app/hm_a.js','./app/hm_b.js',
   './app/sat.js','./app/sat_a.js','./app/sat_b.js',
-  './app/body_a.js','./app/body_b.js',
+  './app/body_a1.js','./app/body_a2.js','./app/body_b1.js','./app/body_b2.js',
 ];
 self.addEventListener('install', (e) => {
   e.waitUntil(caches.open(CACHE).then(async (c) => {
