@@ -2,7 +2,7 @@
 (async () => {
   const base = new URL('.', import.meta.url);
   const parts = [];
-  for (let i = 0; i < 3; i++) {
+  for (let i = 0; i < 16; i++) {
     const res = await fetch(new URL(`_chunk${i}.js`, base));
     if (!res.ok) throw new Error('chunk ' + i + ' HTTP ' + res.status);
     parts.push(await res.text());
