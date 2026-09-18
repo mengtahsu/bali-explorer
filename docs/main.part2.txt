@@ -1,0 +1,118 @@
+  let loaded = 0;
+  const total = cols * rows;
+  const tasks = [];
+  for (let ty = nw.y; ty <= se.y; ty++) {
+    for (let tx = nw.x; tx <= se.x; tx++) {
+      const url = `https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/${Z}/${ty}/${tx}`;
+      tasks.push(
+        new Promise((resolve) => {
+          const img = new Image();
+          img.crossOrigin = 'anonymous';
+          img.onload = () => {
+            mctx.drawImage(img, (tx - nw.x) * TW, (ty - nw.y) * TW);
+            loaded++;
+            resolve(true);
+          };
+          img.onerror = () => {
+            loaded++;
+            resolve(false);
+          };
+          img.src = url;
+        })
+      );
+    }
+  }
+  const results = await Promise.all(tasks);
+  const okCount = results.filter(Boolean).length;
+  console.info('[Bali] ESRI tiles', okCount, '/', total);
+
+  if (okCount < total * 0.4) {
+    console.warn('[Bali] ESRI sparse — trying embedded / solid fallback');
+    try { return await loadEmbeddedSat(); } catch (e) {
+      console.warn('[Bali] embed failed', e);
+      const c = document.createElement('canvas'); c.width=1024; c.height=624;
+      const g=c.getContext('2d'); g.fillStyle='#1a5a3a'; g.fillRect(0,0,1024,624);
+      const tex=new THREE.CanvasTexture(c); tex.colorSpace=THREE.SRGBColorSpace; return tex;
+    }
+  }
+
+  const cornerNW = tileToLatLon(nw.x, nw.y, Z);
+  const cornerSE = tileToLatLon(se.x + 1, se.y + 1, Z);
+  const my0 = mercY(cornerNW.lat);
+  const my1 = mercY(cornerSE.lat);
+
+  /* Sample mosaic into geographic UV canvas */
+  const tmp = document.createElement('canvas');
+  tmp.width = mosaic.width;
+  tmp.height = mosaic.height;
+  tmp.getContext('2d').drawImage(mosaic, 0, 0);
+  /* drawImage stretch: map lon/lat rect from mosaic */
+  /* Use drawImage with computed source rect for each strip for speed */
+  const srcX0 = ((LON_MIN - cornerNW.lon) / (cornerSE.lon - cornerNW.lon)) * mosaic.width;
+  const srcX1 = ((LON_MAX - cornerNW.lon) / (cornerSE.lon - cornerNW.lon)) * mosaic.width;
+  const srcY0 = ((mercY(LAT_MAX) - my0) / (my1 - my0)) * mosaic.height;
+  const srcY1 = ((mercY(LAT_MIN) - my0) / (my1 - my0)) * mosaic.height;
+  ctx.drawImage(
+    mosaic,
+    srcX0, srcY0, srcX1 - srcX0, srcY1 - srcY0,
+    0, 0, OUT_W, OUT_H
+  );
+
+  const tex = new THREE.CanvasTexture(canvasEl);
+  tex.colorSpace = THREE.SRGBColorSpace;
+  tex.anisotropy = Math.min(8, renderer.capabilities.getMaxAnisotropy());
+  tex.needsUpdate = true;
+  return tex;
+}
+
+function loadEmbeddedSat() {
+  return new Promise((resolve, reject) => {
+    if (!SAT_JPG_B64) return Promise.reject(new Error('no embedded sat'));
+    const url = b64ToImageUrl(SAT_JPG_B64, 'image/jpeg');
+    const loader = new THREE.TextureLoader();
+    loader.load(
+      url,
+      (tex) => {
+        tex.colorSpace = THREE.SRGBColorSpace;
+        tex.anisotropy = Math.min(8, renderer.capabilities.getMaxAnisotropy());
+        URL.revokeObjectURL(url);
+        resolve(tex);
+      },
+      undefined,
+      reject
+    );
+  });
+}
+
+/* —— Terrain meshes (LOD by altitude) —— */
+const G = {
+  extreme: new THREE.Group(),
+  high: new THREE.Group(),
+  mid: new THREE.Group(),
+  low: new THREE.Group(),
+};
+Object.values(G).forEach((g) => scene.add(g));
+
+const BANDS = [
+  { min: 2000, name: '極高空', cls: 'l0' },
+  { min: 1200, name: '高空', cls: 'l1' },
+  { min: 700, name: '中高', cls: 'l2' },
+  { min: 400, name: '中空', cls: 'l3' },
+  { min: 200, name: '低空', cls: 'l4' },
+  { min: 80, name: '近地', cls: 'l5' },
+  { min: 30, name: '貼地', cls: 'l6' },
+  { min: 0, name: '超低', cls: 'l7' },
+];
+
+function buildTerrainGeo(segX, segZ) {
+  const geo = new THREE.PlaneGeometry(WORLD_W, WORLD_D, segX, segZ);
+  geo.rotateX(-Math.PI / 2);
+  const pos = geo.attributes.position;
+  for (let i = 0; i < pos.count; i++) {
+    const x = pos.getX(i);
+    const z = pos.getZ(i);
+    let y = sampleHeight(x, z);
+    if (y < 0.5) y = 0; /* ocean floor at 0 — water plane covers */
+    pos.setY(i, y);
+  }
+  pos.needsUpdate = true;
