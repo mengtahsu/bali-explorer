@@ -2,45 +2,64 @@
 <html lang="zh-Hant">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>峇里島探險 · Bali Explorer</title>
-    <link rel="stylesheet" href="/style.css" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <title>峇里島飛行模擬 · Bali Flight</title>
+    <link rel="stylesheet" href="./style.css" />
   </head>
   <body>
     <div id="ui">
       <header>
-        <h1>峇里島探險</h1>
-        <p class="sub">Bali Explorer · 收集行程印章</p>
+        <h1>峇里島飛行</h1>
+        <p class="sub">Bali Flight Simulator</p>
       </header>
       <div id="hud">
-        <div id="progress">印章 <span id="count">0</span> / <span id="total">4</span></div>
+        <div class="hud-row"><span class="hud-label">高度</span> <span id="alt">0</span> m</div>
+        <div class="hud-row"><span class="hud-label">速度</span> <span id="spd">0</span> km/h</div>
+        <div class="hud-row"><span class="hud-label">航向</span> <span id="hdg">0</span>°</div>
+        <div class="hud-row"><span class="hud-label">油門</span> <span id="thr">0</span>%</div>
+        <div id="layer" class="layer-badge">高空</div>
+        <div id="objective" class="obj">目標：飛往地標</div>
         <ul id="checklist"></ul>
-        <p id="hint">WASD 移動 · 滑鼠轉向 · 靠近地標按 E 蓋章</p>
+        <p id="hint">WASD／方向鍵俯仰偏航 · Q/E 滾轉 · Space/Shift 油門</p>
       </div>
       <div id="toast" hidden></div>
     </div>
+
     <div id="overlay" class="panel">
-      <h2>峇里島探險</h2>
-      <p>開著小綿羊，把行程地標都蓋上印章。</p>
+      <h2>峇里島飛行模擬</h2>
+      <p>駕駛輕型飛機，從南海上空俯瞰峇里島——依高度切換景觀層次，飛往四個行程地標。</p>
       <ul class="tips">
-        <li>DPS 機場</li>
-        <li>Seminyak（W Bali）</li>
-        <li>Hoshinoya／內陸別墅</li>
-        <li>Uluwatu 懸崖</li>
+        <li>✈ DPS 機場</li>
+        <li>🏖 Seminyak</li>
+        <li>🌿 Hoshinoya 內陸</li>
+        <li>🕶 Uluwatu 懸崖</li>
       </ul>
-      <p class="controls">鍵盤：WASD 移動、滑鼠看方向、E 互動<br />觸控：虛擬搖桿＋點地標</p>
-      <button id="startBtn" type="button">開始探險</button>
+      <p class="controls">
+        鍵盤：W/S 俯仰 · A/D 偏航 · ↑↓←→ 同 · Q/E 滾轉 · Space↑ / Shift↓ 油門<br />
+        觸控：左側搖桿俯仰／滾轉 · 右側油門滑桿 · 點地標設為目標
+      </p>
+      <button id="startBtn" type="button">開始飛行</button>
     </div>
+
     <div id="win" class="panel" hidden>
-      <h2>行程印章集滿了！</h2>
-      <p>DPS → Seminyak → Hoshinoya → Uluwatu，峇里島地圖打卡完成。</p>
-      <button id="againBtn" type="button">再玩一次</button>
+      <h2>航線完成！</h2>
+      <p>你已飛過 DPS、Seminyak、Hoshinoya、Uluwatu——峇里島空中巡禮完成。</p>
+      <button id="againBtn" type="button">再飛一次</button>
     </div>
+
     <div id="joy" aria-hidden="true">
       <div id="joyBase"><div id="joyKnob"></div></div>
-      <button id="actionBtn" type="button">E</button>
+      <div id="throttleBar">
+        <div id="throttleTrack">
+          <div id="throttleKnob"></div>
+        </div>
+        <span class="thr-label">油門</span>
+      </div>
     </div>
+
     <canvas id="c"></canvas>
-    <script type="module" src="/main.js"></script>
+    <script type="module" src="./main.js"></script>
   </body>
 </html>
