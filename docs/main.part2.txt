@@ -1,5 +1,4 @@
-  let loaded = 0;
-  const total = cols * rows;
+nst total = cols * rows;
   const tasks = [];
   for (let ty = nw.y; ty <= se.y; ty++) {
     for (let tx = nw.x; tx <= se.x; tx++) {
@@ -27,13 +26,8 @@
   console.info('[Bali] ESRI tiles', okCount, '/', total);
 
   if (okCount < total * 0.4) {
-    console.warn('[Bali] ESRI sparse — trying embedded / solid fallback');
-    try { return await loadEmbeddedSat(); } catch (e) {
-      console.warn('[Bali] embed failed', e);
-      const c = document.createElement('canvas'); c.width=1024; c.height=624;
-      const g=c.getContext('2d'); g.fillStyle='#1a5a3a'; g.fillRect(0,0,1024,624);
-      const tex=new THREE.CanvasTexture(c); tex.colorSpace=THREE.SRGBColorSpace; return tex;
-    }
+    console.warn('[Bali] ESRI sparse — using embedded satellite fallback');
+    return loadEmbeddedSat();
   }
 
   const cornerNW = tileToLatLon(nw.x, nw.y, Z);
@@ -67,7 +61,6 @@
 
 function loadEmbeddedSat() {
   return new Promise((resolve, reject) => {
-    if (!SAT_JPG_B64) return Promise.reject(new Error('no embedded sat'));
     const url = b64ToImageUrl(SAT_JPG_B64, 'image/jpeg');
     const loader = new THREE.TextureLoader();
     loader.load(
@@ -116,3 +109,23 @@ function buildTerrainGeo(segX, segZ) {
     pos.setY(i, y);
   }
   pos.needsUpdate = true;
+  geo.computeVertexNormals();
+  return geo;
+}
+
+const ocean = new THREE.Mesh(
+  new THREE.CircleGeometry(400000, 96),
+  new THREE.MeshStandardMaterial({ color: 0x0a3d5c, roughness: 0.28, metalness: 0.2 })
+);
+ocean.rotation.x = -Math.PI / 2;
+ocean.position.y = -0.5;
+scene.add(ocean);
+
+let satTex = null;
+
+function buildTerrains() {
+  const mat = new THREE.MeshStandardMaterial({
+    map: satTex,
+    roughness: 0.95,
+    metalness: 0.02,
+  }
