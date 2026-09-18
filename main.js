@@ -1,4 +1,4 @@
-import * as THREE from 'three';
+import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.js';
 
 const canvas = document.getElementById('c');
 const overlay = document.getElementById('overlay');
@@ -314,11 +314,11 @@ function setupJoy() {
 setupJoy();
 
 function showToast(msg) {
-  toastEl.hidden = false;
+  toastEl.hidden = false; toastEl.style.display = '';
   toastEl.textContent = msg;
   clearTimeout(showToast._t);
   showToast._t = setTimeout(() => {
-    toastEl.hidden = true;
+    toastEl.hidden = true; toastEl.style.display = 'none';
   }, 1800);
 }
 
@@ -344,12 +344,13 @@ function tryCollect() {
   if (collected.size >= LANDMARKS.length) {
     setTimeout(() => {
       playing = false;
-      winPanel.hidden = false;
+      setPanel(winPanel, true);
     }, 600);
   }
 }
 
 function resetGame() {
+  setPanel(winPanel, false);
   collected.clear();
   countEl.textContent = '0';
   checklistEl.innerHTML = LANDMARKS.map(
@@ -361,19 +362,36 @@ function resetGame() {
   }
   player.position.set(20, 1.2, 16);
   yaw = Math.PI * 0.85;
-  winPanel.hidden = true;
+  setPanel(winPanel, false);
 }
 
-startBtn.addEventListener('click', () => {
-  overlay.hidden = true;
+setPanel(winPanel, false);
+setPanel(overlay, true);
+
+function startGame() {
+  setPanel(overlay, false);
+  setPanel(winPanel, false);
   playing = true;
   showToast('出發！往黃色 DPS 機場去');
-});
-againBtn.addEventListener('click', () => {
+}
+function playAgain() {
   resetGame();
+  setPanel(winPanel, false);
+  setPanel(overlay, false);
   playing = true;
   showToast('再走一趟峇里島');
-});
+}
+startBtn.addEventListener('click', startGame);
+againBtn.addEventListener('click', playAgain);
+startBtn.addEventListener('touchend', (e) => { e.preventDefault(); startGame(); }, { passive: false });
+againBtn.addEventListener('touchend', (e) => { e.preventDefault(); playAgain(); }, { passive: false });
+
+
+function setPanel(el, visible) {
+  if (!el) return;
+  el.hidden = !visible;
+  el.style.display = visible ? 'grid' : 'none';
+}
 
 const clock = new THREE.Clock();
 const speed = 12;
