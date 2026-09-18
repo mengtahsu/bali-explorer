@@ -1,0 +1,104 @@
+          if (playing) { playing = false; winPanel.hidden = false; }
+        }, 900);
+      }
+    }
+  }
+  for (const [id, m] of Object.entries(markerMeshes)) {
+    m.ball.scale.setScalar(1 + (flyTarget === id ? Math.sin(performance.now() * 0.006) * 0.25 : 0));
+  }
+}
+
+/**
+ * Coordinated-turn arcade model:
+ * - Joystick/keys X → bank (roll) only
+ * - Joystick/keys Y → pitch only
+ * - Turn rate ≈ g * tan(bank) / V  (symmetric L/R)
+ * - Vertical speed = speed * sin(pitch)  — bank does NOT change altitude
+ * - Integrate velocity along aircraft nose (quaternion)
+ */
+function updateFlight(dt) {
+  if (keys.has('Space')) throttle = Math.min(1, throttle + dt * 0.35);
+  if (keys.has('ShiftLeft') || keys.has('ShiftRight')) throttle = Math.max(0, throttle - dt * 0.4);
+
+  let pitchInput = 0;
+  let bankInput = 0;
+
+  /* Pitch: W/S / Up/Down / joy.y — nose up is negative joy.y (screen up) → positive pitch */
+  if (keys.has('KeyW') || keys.has('ArrowUp')) pitchInput += 1;
+  if (keys.has('KeyS') || keys.has('ArrowDown')) pitchInput -= 1;
+  pitchInput += -joy.y * 1.2;
+
+  /* Bank: A/D / Left/Right / Q/E / joy.x — NO yaw coupling from stick X */
+  if (keys.has('KeyA') || keys.has('ArrowLeft') || keys.has('KeyQ')) bankInput -= 1;
+  if (keys.has('KeyD') || keys.has('ArrowRight') || keys.has('KeyE')) bankInput += 1;
+  bankInput += joy.x * 1.2;
+
+  flight.pitch += pitchInput * 0.32 * dt;
+  flight.roll += bankInput * 0.55 * dt;
+
+  /* Auto-center roll when no bank input */
+  if (Math.abs(bankInput) < 0.05) flight.roll *= Math.exp(-1.2 * dt);
+
+  flight.pitch = THREE.MathUtils.clamp(flight.pitch, -0.45, 0.4);
+  flight.roll = THREE.MathUtils.clamp(flight.roll, -1.05, 1.05);
+
+  /* Throttle → airspeed (no pitch from roll) */
+  const tgt = VMIN + throttle * (CRUISE - VMIN);
+  flight.speed += (tgt - flight.speed) * (1 - Math.exp(-0.9 * dt));
+  flight.speed = Math.max(70, Math.min(290, flight.speed));
+
+  /* Coordinated turn: ψ̇ = g * tan(φ) / V  — identical magnitude for ±bank */
+  const vSafe = Math.max(flight.speed, 60);
+  const turnRate = (G_ACCEL * Math.tan(flight.roll)) / vSafe;
+  flight.yaw -= turnRate * dt; /* right bank (roll>0) → turn right → decrease yaw in our +X-forward / Y-up frame?
+    Forward after yaw: (cos yaw, 0, -sin yaw). Increasing yaw turns toward -Z then -X (left from east).
+    Right turn from north (yaw=π/2): toward east → yaw decreases toward 0. Right bank → yaw decreases. yaw -= positive turnRate when roll>0. YES. */
+
+  orientPlane();
+
+  /* Velocity along nose; altitude rate from pitch ONLY (arcade-correct level turn) */
+  _fwd.set(1, 0, 0).applyQuaternion(plane.quaternion);
+  const horiz = Math.cos(flight.pitch);
+  const vert = Math.sin(flight.pitch);
+  /* Rebuild horizontal forward from yaw so bank tilt of nose doesn't leak into climb */
+  _vel.set(Math.cos(flight.yaw) * horiz, vert, -Math.sin(flight.yaw) * horiz);
+  flight.pos.addScaledVector(_vel, flight.speed * dt);
+
+  plane.position.copy(flight.pos);
+  collide(dt);
+  checkLM();
+}
+
+function updateHUD() {
+  const alt = Math.max(0, flight.pos.y);
+  altEl.textContent = String(Math.round(alt));
+  spdEl.textContent = String(Math.round(flight.speed * 3.6));
+  /* Heading: 0=N, 90=E — yaw π/2 = north */
+  let hdg = ((-flight.yaw * 180) / Math.PI + 90) % 360;
+  if (hdg < 0) hdg += 360;
+  hdgEl.textContent = String(Math.round(hdg));
+  thrEl.textContent = String(Math.round(throttle * 100));
+  updateLayers(alt);
+  if (flyTarget) {
+    const lm = LANDMARKS.find((l) => l.id === flyTarget);
+    if (lm) {
+      const d = Math.hypot(flight.pos.x - lm.x, flight.pos.z - lm.z);
+      objectiveEl.textContent = `目標：${lm.name}（${Math.round(d / 100) / 10} km）`;
+    }
+  }
+}
+
+function resize() {
+  const w = innerWidth, h = innerHeight;
+  camera.aspect = w / h;
+  camera.updateProjectionMatrix();
+  renderer.setSize(w, h, false);
+  canvas.style.width = w + 'px';
+  canvas.style.height = h + 'px';
+}
+addEventListener('resize', resize);
+resize();
+
+let last = performance.now(), waterT = 0;
+let ready = false;
+
