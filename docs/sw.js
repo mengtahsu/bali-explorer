@@ -1,10 +1,23 @@
 /* Bali Flight PWA */
-const CACHE = 'bali-flight-v8';
+const CACHE = 'bali-flight-v9';
 const ASSETS = [
-  './app.html','./app.js','./app.css','./manifest.webmanifest','./icons/icon.svg',
-  './app/hm128.js','./app/hm_a.js','./app/hm_b.js',
-  './app/sat.js','./app/sat_a.js','./app/sat_b.js',
-  './app/body_0.js','./app/body_1.js','./app/body_2.js',
+  './app.html',
+  './app.js',
+  './app.css',
+  './manifest.webmanifest',
+  './icons/icon.svg',
+  './app/hm128.js',
+  './app/hm_a.js',
+  './app/hm_b.js',
+  './app/sat.js',
+  './app/sat_a.js',
+  './app/sat_b.js',
+  './app/b0.js',
+  './app/b1.js',
+  './app/b2.js',
+  './app/b3.js',
+  './app/b4.js',
+  './app/b5.js',
 ];
 self.addEventListener('install', (e) => {
   e.waitUntil(caches.open(CACHE).then(async (c) => {
