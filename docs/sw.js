@@ -1,5 +1,5 @@
 /* Bali Flight PWA — cache-first for offline play */
-const CACHE = 'bali-flight-v2';
+const CACHE = 'bali-flight-v3';
 const ASSETS = [
   './app.html',
   './app.js',
@@ -7,6 +7,10 @@ const ASSETS = [
   './manifest.webmanifest',
   './icons/icon.svg',
   './app/hm128.js',
+  './app/hm_p0.js',
+  './app/hm_p1.js',
+  './app/hm_p2.js',
+  './app/hm_p3.js',
   './app/sat.js',
 ];
 
