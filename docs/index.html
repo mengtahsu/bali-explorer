@@ -2,10 +2,17 @@
 <html lang="zh-Hant">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
     <title>峇里島探險 · Bali Explorer</title>
-    <script type="module" crossorigin src="/bali-explorer/assets/index-CokHQOvy.js"></script>
-    <link rel="stylesheet" crossorigin href="/bali-explorer/assets/index-PrXDIsI7.css">
+    <link rel="stylesheet" href="./style.css" />
+    <script type="importmap">
+    {
+      "imports": {
+        "three": "https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.js"
+      }
+    }
+    </script>
   </head>
   <body>
     <div id="ui">
@@ -42,5 +49,6 @@
       <button id="actionBtn" type="button">E</button>
     </div>
     <canvas id="c"></canvas>
+    <script type="module" src="./main.js"></script>
   </body>
 </html>

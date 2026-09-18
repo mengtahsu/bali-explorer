@@ -1,0 +1,170 @@
+:root {
+  --bg: #0b1c24;
+  --card: rgba(8, 28, 36, 0.82);
+  --accent: #f0b429;
+  --mint: #7dcea0;
+  --text: #f4f7f5;
+  --muted: #a8c0c0;
+}
+* { box-sizing: border-box; }
+html, body {
+  margin: 0;
+  height: 100%;
+  overflow: hidden;
+  font-family: "Segoe UI", "PingFang TC", "Noto Sans TC", sans-serif;
+  background: var(--bg);
+  color: var(--text);
+}
+#c {
+  display: block;
+  width: 100%;
+  height: 100%;
+  touch-action: none;
+}
+#ui {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 2;
+}
+header {
+  position: absolute;
+  top: 16px;
+  left: 16px;
+}
+header h1 {
+  margin: 0;
+  font-size: 1.35rem;
+  letter-spacing: 0.04em;
+  text-shadow: 0 2px 12px rgba(0,0,0,.45);
+}
+.sub {
+  margin: 4px 0 0;
+  color: var(--muted);
+  font-size: 0.85rem;
+}
+#hud {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  min-width: 200px;
+  padding: 12px 14px;
+  border-radius: 14px;
+  background: var(--card);
+  border: 1px solid rgba(255,255,255,.08);
+  backdrop-filter: blur(8px);
+}
+#progress {
+  font-weight: 700;
+  color: var(--accent);
+  margin-bottom: 8px;
+}
+#checklist {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  font-size: 0.9rem;
+}
+#checklist li {
+  margin: 4px 0;
+  color: var(--muted);
+}
+#checklist li.done {
+  color: var(--mint);
+  text-decoration: line-through;
+}
+#hint {
+  margin: 10px 0 0;
+  font-size: 0.75rem;
+  color: var(--muted);
+}
+#toast {
+  position: absolute;
+  left: 50%;
+  bottom: 28px;
+  transform: translateX(-50%);
+  padding: 10px 16px;
+  border-radius: 999px;
+  background: rgba(240, 180, 41, 0.95);
+  color: #1a1200;
+  font-weight: 700;
+  pointer-events: none;
+}
+.panel {
+  position: fixed;
+  inset: 0;
+  z-index: 5;
+  display: grid;
+  place-content: center;
+  gap: 12px;
+  padding: 24px;
+  background: radial-gradient(circle at 30% 20%, #1a4a52, #071318 70%);
+  text-align: center;
+}
+.panel h2 { margin: 0; font-size: 2rem; }
+.panel p { margin: 0; color: var(--muted); max-width: 28rem; }
+.tips {
+  list-style: none;
+  margin: 8px auto;
+  padding: 0;
+  display: grid;
+  gap: 6px;
+  color: var(--mint);
+}
+.controls { font-size: 0.85rem; }
+.panel button, #actionBtn {
+  pointer-events: auto;
+  justify-self: center;
+  border: 0;
+  border-radius: 999px;
+  padding: 12px 28px;
+  font-size: 1rem;
+  font-weight: 700;
+  background: linear-gradient(135deg, #f0b429, #e07a2f);
+  color: #1a1200;
+  cursor: pointer;
+}
+.panel button:hover { filter: brightness(1.05); }
+#joy {
+  position: fixed;
+  inset: 0;
+  z-index: 3;
+  pointer-events: none;
+  display: none;
+}
+#joyBase {
+  position: absolute;
+  left: 28px;
+  bottom: 28px;
+  width: 120px;
+  height: 120px;
+  border-radius: 50%;
+  background: rgba(255,255,255,.12);
+  border: 1px solid rgba(255,255,255,.2);
+  pointer-events: auto;
+  touch-action: none;
+}
+#joyKnob {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 52px;
+  height: 52px;
+  margin: -26px 0 0 -26px;
+  border-radius: 50%;
+  background: rgba(240,180,41,.9);
+}
+#actionBtn {
+  position: absolute;
+  right: 28px;
+  bottom: 40px;
+  width: 64px;
+  height: 64px;
+  padding: 0;
+  display: grid;
+  place-items: center;
+}
+@media (pointer: coarse) {
+  #joy { display: block; }
+  #hint { display: none; }
+}
