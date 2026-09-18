@@ -20,7 +20,6 @@ const flight = {
   speed: 210,
 };
 /* Aircraft model faces +X. Yaw 0 → fly +X (east). Spawn south → fly north = yaw = -PI/2 or +3PI/2.
-   Previous code used yaw=PI with +X forward → flies -X (west). We want north = -Z.
    Rotation YXZ: yaw around Y. Forward (1,0,0) after yaw θ: (cosθ, 0, -sinθ) in YXZ? 
    THREE Euler YXZ: applies Y then X then Z.
    set(pitch, yaw, -roll, 'YXZ') then apply to (1,0,0):
