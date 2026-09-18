@@ -1,0 +1,2 @@
+export const HM_P0 =
+  "PLACEHOLDER_WILL_REPLACE";
