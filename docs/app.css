@@ -1,6 +1,6 @@
 :root {
   --bg: #061018;
-  --card: rgba(6, 22, 32, 0.88);
+  --card: rgba(6, 22, 32, 0.9);
   --accent: #f0b429;
   --mint: #7dcea0;
   --sky: #6ec6ff;
@@ -17,6 +17,7 @@ html, body {
   color: var(--text);
   -webkit-user-select: none;
   user-select: none;
+  -webkit-touch-callout: none;
 }
 #c {
   display: block;
@@ -39,12 +40,13 @@ header h1 {
   margin: 0;
   font-size: 1.25rem;
   letter-spacing: 0.04em;
-  text-shadow: 0 2px 14px rgba(0,0,0,.5);
+  text-shadow: 0 2px 14px rgba(0,0,0,.55), 0 0 2px #000;
 }
 .sub {
   margin: 2px 0 0;
   color: var(--muted);
   font-size: 0.8rem;
+  text-shadow: 0 1px 6px #000;
 }
 #hud {
   position: absolute;
@@ -54,24 +56,26 @@ header h1 {
   padding: 10px 12px;
   border-radius: 14px;
   background: var(--card);
-  border: 1px solid rgba(255,255,255,.1);
+  border: 2px solid rgba(240, 180, 41, 0.45);
   backdrop-filter: blur(10px);
   font-variant-numeric: tabular-nums;
+  box-shadow: 0 4px 20px rgba(0,0,0,.4);
 }
 .hud-row {
   display: flex;
   justify-content: space-between;
   gap: 12px;
-  font-size: 0.88rem;
+  font-size: 0.95rem;
+  font-weight: 700;
   margin: 3px 0;
 }
-.hud-label { color: var(--muted); }
+.hud-label { color: var(--muted); font-weight: 600; }
 .layer-badge {
   margin-top: 8px;
   display: inline-block;
   padding: 3px 10px;
   border-radius: 999px;
-  background: rgba(110, 198, 255, 0.2);
+  background: rgba(110, 198, 255, 0.25);
   color: var(--sky);
   font-weight: 700;
   font-size: 0.85rem;
@@ -86,44 +90,42 @@ header h1 {
 .layer-badge.l7 { background: rgba(240, 140, 60, 0.25); color: #f08c3c; }
 .obj {
   margin-top: 8px;
-  font-size: 0.78rem;
+  font-size: 0.82rem;
   color: var(--accent);
+  font-weight: 700;
 }
 #checklist {
   list-style: none;
   margin: 6px 0 0;
   padding: 0;
-  font-size: 0.78rem;
+  font-size: 0.8rem;
 }
-#checklist li {
-  margin: 3px 0;
-  color: var(--muted);
-}
+#checklist li { margin: 3px 0; color: var(--muted); }
 #checklist li.done { color: var(--mint); }
 #checklist li.active { color: var(--accent); font-weight: 700; }
 #hint {
   margin: 8px 0 0;
-  font-size: 0.68rem;
-  color: var(--muted);
+  font-size: 0.72rem;
+  color: #c8dde0;
   line-height: 1.35;
-  max-width: 200px;
+  max-width: 210px;
 }
 #toast {
   position: absolute;
   left: 50%;
-  bottom: max(100px, env(safe-area-inset-bottom));
+  bottom: max(200px, env(safe-area-inset-bottom));
   transform: translateX(-50%);
-  padding: 10px 18px;
+  padding: 12px 20px;
   border-radius: 999px;
-  background: rgba(240, 180, 41, 0.95);
+  background: rgba(240, 180, 41, 0.97);
   color: #1a1200;
-  font-weight: 700;
+  font-weight: 800;
+  font-size: 1rem;
   pointer-events: none;
   white-space: nowrap;
+  box-shadow: 0 4px 16px rgba(0,0,0,.35);
 }
-[hidden] {
-  display: none !important;
-}
+[hidden] { display: none !important; }
 .panel {
   position: fixed;
   inset: 0;
@@ -146,59 +148,67 @@ header h1 {
   color: var(--mint);
   font-size: 0.95rem;
 }
-.controls { font-size: 0.8rem; line-height: 1.55; }
+.controls { font-size: 0.82rem; line-height: 1.55; }
 .panel button {
   pointer-events: auto;
   justify-self: center;
   border: 0;
   border-radius: 999px;
-  padding: 13px 32px;
-  font-size: 1.05rem;
-  font-weight: 700;
+  padding: 16px 40px;
+  font-size: 1.15rem;
+  font-weight: 800;
   background: linear-gradient(135deg, #f0b429, #e07a2f);
   color: #1a1200;
   cursor: pointer;
-  box-shadow: 0 6px 24px rgba(240, 180, 41, 0.35);
+  box-shadow: 0 6px 24px rgba(240, 180, 41, 0.4);
+  min-height: 52px;
+  min-width: 180px;
+  -webkit-tap-highlight-color: transparent;
 }
 .panel button:hover { filter: brightness(1.06); }
 .panel button:active { transform: scale(0.98); }
 
+/* ALWAYS show big on-screen controls */
 #joy {
   position: fixed;
   inset: 0;
   z-index: 3;
   pointer-events: none;
-  display: none;
+  display: block !important;
 }
 #joyBase {
   position: absolute;
-  left: max(20px, env(safe-area-inset-left));
-  bottom: max(24px, env(safe-area-inset-bottom));
-  width: 130px;
-  height: 130px;
+  left: max(16px, env(safe-area-inset-left));
+  bottom: max(88px, calc(env(safe-area-inset-bottom) + 72px));
+  width: 140px;
+  height: 140px;
+  min-width: 120px;
+  min-height: 120px;
   border-radius: 50%;
-  background: rgba(255,255,255,.1);
-  border: 1px solid rgba(255,255,255,.22);
+  background: rgba(255,255,255,.18);
+  border: 3px solid rgba(240,180,41,.75);
   pointer-events: auto;
   touch-action: none;
+  box-shadow: 0 4px 20px rgba(0,0,0,.35), inset 0 0 24px rgba(0,0,0,.15);
 }
 #joyKnob {
   position: absolute;
   left: 50%;
   top: 50%;
-  width: 54px;
-  height: 54px;
-  margin: -27px 0 0 -27px;
+  width: 60px;
+  height: 60px;
+  margin: -30px 0 0 -30px;
   border-radius: 50%;
-  background: rgba(240,180,41,.92);
-  box-shadow: 0 2px 10px rgba(0,0,0,.35);
+  background: rgba(240,180,41,.95);
+  box-shadow: 0 2px 12px rgba(0,0,0,.4);
   will-change: transform;
+  border: 2px solid #fff3;
 }
 #throttleBar {
   position: absolute;
-  right: max(20px, env(safe-area-inset-right));
-  bottom: max(28px, env(safe-area-inset-bottom));
-  width: 52px;
+  right: max(16px, env(safe-area-inset-right));
+  bottom: max(88px, calc(env(safe-area-inset-bottom) + 72px));
+  width: 64px;
   pointer-events: auto;
   touch-action: none;
   display: flex;
@@ -208,38 +218,80 @@ header h1 {
 }
 #throttleTrack {
   position: relative;
-  width: 36px;
-  height: 160px;
-  border-radius: 18px;
-  background: rgba(255,255,255,.12);
-  border: 1px solid rgba(255,255,255,.22);
+  width: 44px;
+  height: 170px;
+  border-radius: 22px;
+  background: rgba(255,255,255,.16);
+  border: 3px solid rgba(240,180,41,.7);
+  box-shadow: 0 4px 16px rgba(0,0,0,.3);
 }
 #throttleKnob {
   position: absolute;
   left: 50%;
   bottom: 40%;
-  width: 44px;
-  height: 28px;
-  margin-left: -22px;
-  border-radius: 8px;
+  width: 52px;
+  height: 34px;
+  margin-left: -26px;
+  border-radius: 10px;
   background: linear-gradient(180deg, #f0b429, #e07a2f);
-  box-shadow: 0 2px 8px rgba(0,0,0,.4);
+  box-shadow: 0 2px 10px rgba(0,0,0,.45);
   will-change: bottom;
+  border: 2px solid #fff4;
 }
 .thr-label {
-  font-size: 0.72rem;
-  color: var(--muted);
-  text-shadow: 0 1px 4px #000;
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: #fff;
+  text-shadow: 0 1px 6px #000;
 }
-@media (pointer: coarse) {
-  #joy { display: block; }
-  #hint { display: none; }
+#arcadeBtns {
+  position: absolute;
+  left: 50%;
+  bottom: max(12px, env(safe-area-inset-bottom));
+  transform: translateX(-50%);
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 8px;
+  pointer-events: auto;
+  max-width: 96vw;
+  z-index: 4;
+}
+.arc-btn {
+  min-width: 72px;
+  min-height: 52px;
+  padding: 10px 14px;
+  border: 2px solid rgba(240,180,41,.8);
+  border-radius: 14px;
+  background: rgba(8, 28, 40, 0.88);
+  color: #fff;
+  font-size: 0.95rem;
+  font-weight: 800;
+  pointer-events: auto;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+  box-shadow: 0 3px 12px rgba(0,0,0,.35);
+}
+.arc-btn:active, .arc-btn:focus {
+  background: rgba(240, 180, 41, 0.85);
+  color: #1a1200;
+}
+.arc-boost {
+  border-color: #7dcea0;
+  color: var(--mint);
+}
+.arc-boost:active, .arc-boost:focus {
+  background: rgba(125, 206, 160, 0.9);
+  color: #062016;
+}
+@media (min-width: 900px) and (pointer: fine) {
+  #arcadeBtns { opacity: 0.85; }
 }
 @media (max-width: 520px) {
   header h1 { font-size: 1.05rem; }
-  #hud { min-width: 140px; padding: 8px 10px; font-size: 0.85rem; }
+  #hud { min-width: 140px; padding: 8px 10px; }
+  #joyBase { width: 128px; height: 128px; }
 }
-
 .install-hint {
   margin: 4px 0 0;
   font-size: 0.78rem;
