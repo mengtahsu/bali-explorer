@@ -24,7 +24,8 @@ const joyBase = document.getElementById('joyBase');
 const joyKnob = document.getElementById('joyKnob');
 const throttleTrack = document.getElementById('throttleTrack');
 const throttleKnob = document.getElementById('throttleKnob');
-winPanel.hidden = true;
+function setPanel(el,v){if(!el)return;el.hidden=!v;el.style.display=v?'grid':'none';}
+setPanel(winPanel,false);setPanel(overlay,true);
 
 /* —— Geographic frame (meters, +X east, +Y up, +Z south) —— */
 const LON_MIN = 114.42, LON_MAX = 115.72;
@@ -98,3 +99,4 @@ scene.add(new THREE.AmbientLight(0x708090, 0.35));
       bot: { value: new THREE.Color(0xc8e0f0) },
     },
     vertexShader: `varying vec3 v; void main(){ v=normalize((modelMatrix*vec4(position,1.0)).xyz); gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.0); }`,
+    fragmentS
