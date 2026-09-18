@@ -1,15 +1,4 @@
-  throttle = THREE.MathUtils.clamp(1 - (ev.clientY - r.top) / r.height, 0, 1);
-  throttleKnob.style.bottom = `${throttle * 100}%`;
-  throttleKnob.style.transform = 'translateY(50%)';
-}
-throttleKnob.style.bottom = '72%';
-throttleKnob.style.transform = 'translateY(50%)';
-throttleTrack.addEventListener('pointerdown', (e) => {
-  thrOn = true; thrPid = e.pointerId;
-  throttleTrack.setPointerCapture(e.pointerId);
-  thrFrom(e); e.preventDefault();
-});
-throttleTrack.addEventListener('pointermove', (e) => { if (thrOn && e.pointerId === thrPid) thrFrom(e); });
+', (e) => { if (thrOn && e.pointerId === thrPid) thrFrom(e); });
 throttleTrack.addEventListener('pointerup', () => { thrOn = false; });
 throttleTrack.addEventListener('pointercancel', () => { thrOn = false; });
 
@@ -108,3 +97,20 @@ function checkLM() {
       }
       if (visited.size === LANDMARKS.length) {
         setTimeout(() => {
+          if (playing) { playing = false; setPanel(winPanel,true); }
+        }, 900);
+      }
+    }
+  }
+  for (const [id, m] of Object.entries(markerMeshes)) {
+    m.ball.scale.setScalar(1 + (flyTarget === id ? Math.sin(performance.now() * 0.006) * 0.25 : 0));
+  }
+}
+
+/**
+ * Coordinated-turn arcade model:
+ * - Joystick/keys X → bank (roll) only
+ * - Joystick/keys Y → pitch only
+ * - Turn rate ≈ g * tan(bank) / V  (symmetric L/R)
+ * - Vertical speed = speed * sin(pitch)  — bank does NOT change altitude
+ * - Integrate velocity along aircraft nose (quatern
