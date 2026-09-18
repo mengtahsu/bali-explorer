@@ -1,34 +1,17 @@
-# 峇里島探險 · Bali Explorer
+# Bali Flight Simulator
 
-瀏覽器 3D 小遊戲：在風格化峇里島地圖上騎車打卡行程地標。
+Browser Airbus A330 flight over **real Bali geography**:
 
-## 怎麼玩
+- Elevation from Mapzen/Terrarium DEM (lon 114.42–115.72, lat −8.85–−8.06)
+- Satellite drape (ESRI World Imagery at runtime, embedded fallback)
+- Coordinated-turn flight model: bank turns without asymmetric climb/descent
+- Scale: 1 unit = 1 meter · island ~143×87 km
 
-```bash
-npm install
-npm run dev
-```
+## Play
 
-瀏覽器打開終端機顯示的網址（通常是 `http://localhost:5173`）。
+Open GitHub Pages / raw.githack `docs/index.html`.
 
-### 操作
-- **WASD / 方向鍵**：移動
-- **滑鼠拖曳**：轉向
-- **E / 空白鍵**：靠近地標蓋章
-- 手機：左下虛擬搖桿 + 右側 E 按鈕
+## Controls
 
-### 目標
-依序或任意順序拜訪：
-1. DPS 機場
-2. Seminyak（W Bali）
-3. Hoshinoya／內陸
-4. Uluwatu 懸崖
-
-集滿 4 個印章即通關。地圖為風格化示意，非精確 GPS。
-
-## Build
-
-```bash
-npm run build
-npm run preview
-```
+- W/S — pitch · A/D (or Q/E) — bank (level turn) · Space/Shift — throttle
+- Touch: left stick X=bank Y=pitch, right throttle

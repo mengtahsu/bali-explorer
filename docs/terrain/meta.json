@@ -1,0 +1,14 @@
+{
+  "lonMin": 114.42,
+  "lonMax": 115.72,
+  "latMin": -8.85,
+  "latMax": -8.06,
+  "hmW": 1024,
+  "hmH": 640,
+  "satW": 4096,
+  "satH": 2498,
+  "worldWidth": 143143.175507233,
+  "worldDepth": 87326.5999999999,
+  "centerLon": 115.07,
+  "centerLat": -8.455
+}
