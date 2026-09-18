@@ -1,25 +1,4 @@
-function frame(now) {
-  const dt = Math.min(0.05, (now - last) / 1000);
-  last = now;
-  waterT += dt;
-  ocean.position.y = -0.5 + Math.sin(waterT * 0.4) * 0.25;
-  if (toastTimer > 0) {
-    toastTimer -= dt;
-    if (toastTimer <= 0) toastEl.hidden = true;
-  }
-  if (!ready) {
-    camera.position.set(0, 25000, WORLD_D * 0.55);
-    camera.lookAt(0, 500, 0);
-    renderer.render(scene, camera);
-    requestAnimationFrame(frame);
-    return;
-  }
-  if (playing) {
-    updateFlight(dt);
-    updateCamera(dt);
-    updateHUD();
-  } else if (!overlay.hidden) {
-    const t = now * 0.00006;
+ = now * 0.00006;
     camera.position.set(Math.sin(t) * WORLD_W * 0.55, 14000, Math.cos(t) * WORLD_D * 0.65);
     camera.lookAt(0, 400, 0);
     updateLayers(12000);
@@ -42,47 +21,114 @@ function resetFlight() {
   flyTarget = 'dps';
   objectiveEl.textContent = '目標：飛往 DPS 機場';
   updateChecklist();
-  winPanel.hidden = true;
   plane.position.copy(flight.pos);
   orientPlane();
   updateCamera(1);
   updateHUD();
 }
+function setStartEnabled(on, label) {
+  startBtn.disabled = !on;
+  startBtn.textContent = label;
+  startBtn.style.opacity = on ? '1' : '0.55';
+}
+setStartEnabled(false, '載入地形中…');
+
 function startGame() {
-  if (!ready) return;
-  overlay.hidden = true;
-  winPanel.hidden = true;
+  if (!ready) {
+    showToast('地形還在載入，請稍候');
+    return;
+  }
+  setPanel(overlay, false);
+  setPanel(winPanel, false);
   playing = true;
   resetFlight();
   showToast('起飛！往北飛向真實峇里島');
 }
-startBtn.addEventListener('click', startGame);
-againBtn.addEventListener('click', () => {
-  winPanel.hidden = true;
+function playAgain() {
+  setPanel(winPanel, false);
+  setPanel(overlay, false);
   playing = true;
   resetFlight();
   showToast('再次起飛');
-});
+}
+startBtn.addEventListener('click', startGame);
+againBtn.addEventListener('click', playAgain);
+startBtn.addEventListener('touchend', (e) => { e.preventDefault(); startGame(); }, { passive: false });
+againBtn.addEventListener('touchend', (e) => { e.preventDefault(); playAgain(); }, { passive: false });
+
+function buildFallbackFlat() {
+  /* Minimal green/sea plane if DEM/sat fail — still flyable */
+  heights = new Float32Array(64 * 40);
+  HM_W = 64; HM_H = 40;
+  for (let y = 0; y < HM_H; y++) {
+    for (let x = 0; x < HM_W; x++) {
+      const u = x / (HM_W - 1), v = y / (HM_H - 1);
+      const edge = Math.min(u, v, 1 - u, 1 - v);
+      heights[y * HM_W + x] = edge < 0.08 ? 0 : 80 + 40 * Math.sin(u * 8) * Math.cos(v * 6);
+    }
+  }
+  const c = document.createElement('canvas');
+  c.width = 512; c.height = 320;
+  const ctx = c.getContext('2d');
+  const g = ctx.createLinearGradient(0, 0, 0, 320);
+  g.addColorStop(0, '#2a6a40'); g.addColorStop(1, '#1a4a30');
+  ctx.fillStyle = g; ctx.fillRect(0, 0, 512, 320);
+  satTex = new THREE.CanvasTexture(c);
+  satTex.colorSpace = THREE.SRGBColorSpace;
+  buildTerrains();
+  placeMarkers();
+}
 
 (async function boot() {
   try {
     toastEl.hidden = false;
     toastEl.textContent = '載入真實地形 DEM…';
-    await loadHeightmap();
+    setStartEnabled(false, '載入地形中…');
+    const demP = Promise.race([
+      loadHeightmap(),
+      new Promise((_, rej) => setTimeout(() => rej(new Error('DEM timeout')), 25000)),
+    ]);
+    await demP;
     toastEl.textContent = '載入衛星影像…';
-    satTex = await loadSatelliteTexture();
+    try {
+      satTex = await Promise.race([
+        loadSatelliteTexture(),
+        new Promise((_, rej) => setTimeout(() => rej(new Error('sat timeout')), 20000)),
+      ]);
+    } catch (se) {
+      console.warn(se);
+      toastEl.textContent = '衛星載入較慢，改用備援貼圖…';
+      satTex = await loadEmbeddedSat().catch(() => null);
+    }
+    if (!satTex) {
+      const c = document.createElement('canvas');
+      c.width = 4; c.height = 4;
+      const ctx = c.getContext('2d');
+      ctx.fillStyle = '#2d5a3a'; ctx.fillRect(0, 0, 4, 4);
+      satTex = new THREE.CanvasTexture(c);
+    }
     buildTerrains();
     placeMarkers();
     ready = true;
     updateLayers(8500);
     updateChecklist();
     objectiveEl.textContent = '目標：開始後飛往地標';
-    toastEl.textContent = '就緒 — 真實 DEM + 衛星';
-    setTimeout(() => { if (!playing) toastEl.hidden = true; }, 2000);
-    console.info('[Bali Flight] real DEM+sat · A330 · coordinated turns · island', (WORLD_W / 1000).toFixed(0), '×', (WORLD_D / 1000).toFixed(0), 'km');
+    setStartEnabled(true, '開始飛行');
+    toastEl.textContent = '就緒 — 點開始飛行';
+    setTimeout(() => { if (!playing) toastEl.hidden = true; }, 2500);
+    console.info('[Bali Flight] ready');
   } catch (e) {
     console.error(e);
     toastEl.hidden = false;
-    toastEl.textContent = '載入失敗：' + e.message;
+    toastEl.textContent = '真實地形載入失敗，改用簡易地形…';
+    try {
+      buildFallbackFlat();
+      ready = true;
+      setStartEnabled(true, '開始飛行');
+      showToast('已用備援地形，可開始飛');
+    } catch (e2) {
+      setStartEnabled(false, '載入失敗');
+      toastEl.textContent = '載入失敗：' + (e.message || e);
+    }
   }
 })();

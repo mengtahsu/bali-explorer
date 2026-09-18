@@ -1,20 +1,4 @@
-          if (playing) { playing = false; winPanel.hidden = false; }
-        }, 900);
-      }
-    }
-  }
-  for (const [id, m] of Object.entries(markerMeshes)) {
-    m.ball.scale.setScalar(1 + (flyTarget === id ? Math.sin(performance.now() * 0.006) * 0.25 : 0));
-  }
-}
-
-/**
- * Coordinated-turn arcade model:
- * - Joystick/keys X → bank (roll) only
- * - Joystick/keys Y → pitch only
- * - Turn rate ≈ g * tan(bank) / V  (symmetric L/R)
- * - Vertical speed = speed * sin(pitch)  — bank does NOT change altitude
- * - Integrate velocity along aircraft nose (quaternion)
+ion)
  */
 function updateFlight(dt) {
   if (keys.has('Space')) throttle = Math.min(1, throttle + dt * 0.35);
@@ -102,3 +86,25 @@ resize();
 let last = performance.now(), waterT = 0;
 let ready = false;
 
+function frame(now) {
+  const dt = Math.min(0.05, (now - last) / 1000);
+  last = now;
+  waterT += dt;
+  ocean.position.y = -0.5 + Math.sin(waterT * 0.4) * 0.25;
+  if (toastTimer > 0) {
+    toastTimer -= dt;
+    if (toastTimer <= 0) toastEl.hidden = true;
+  }
+  if (!ready) {
+    camera.position.set(0, 25000, WORLD_D * 0.55);
+    camera.lookAt(0, 500, 0);
+    renderer.render(scene, camera);
+    requestAnimationFrame(frame);
+    return;
+  }
+  if (playing) {
+    updateFlight(dt);
+    updateCamera(dt);
+    updateHUD();
+  } else if (!overlay.hidden) {
+    const t
