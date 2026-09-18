@@ -1,23 +1,11 @@
-/* Bali Flight PWA */
-const CACHE = 'bali-flight-v9';
+/* Bali Flight PWA — arcade self-contained */
+const CACHE = 'bali-flight-v10-arcade';
 const ASSETS = [
   './app.html',
   './app.js',
   './app.css',
   './manifest.webmanifest',
   './icons/icon.svg',
-  './app/hm128.js',
-  './app/hm_a.js',
-  './app/hm_b.js',
-  './app/sat.js',
-  './app/sat_a.js',
-  './app/sat_b.js',
-  './app/b0.js',
-  './app/b1.js',
-  './app/b2.js',
-  './app/b3.js',
-  './app/b4.js',
-  './app/b5.js',
 ];
 self.addEventListener('install', (e) => {
   e.waitUntil(caches.open(CACHE).then(async (c) => {
@@ -32,12 +20,18 @@ self.addEventListener('activate', (e) => {
 });
 self.addEventListener('fetch', (e) => {
   e.respondWith(caches.open(CACHE).then(async (cache) => {
-    const hit = await cache.match(e.request);
-    if (hit) return hit;
     try {
       const res = await fetch(e.request);
-      if (res && res.ok && e.request.method === 'GET') cache.put(e.request, res.clone()).catch(() => {});
+      if (res && res.ok && e.request.method === 'GET') {
+        const url = e.request.url;
+        if (url.includes('app.js') || url.includes('app.css') || url.includes('app.html') || url.includes('sw.js')) {
+          cache.put(e.request, res.clone()).catch(() => {});
+        }
+      }
       return res;
-    } catch (err) { return hit || Response.error(); }
+    } catch (err) {
+      const hit = await cache.match(e.request);
+      return hit || Response.error();
+    }
   }));
 });
